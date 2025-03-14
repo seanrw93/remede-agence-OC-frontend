@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useRef, use } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
-import { loginUser, signupUser } from '../store/auth/authSlice'
+import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { loginUser, signupUser } from "../store/auth/authSlice";
+import { useValidationUtils } from "../utils/validationUtils";
 
 export const Auth = () => {
-
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState(localStorage.getItem("email") || "");
-    const [password, setPassword] = useState('');
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
+    const [password, setPassword] = useState(localStorage.getItem("password") || "");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [rememberMe, setRememberMe] = useState(localStorage.getItem("email") ? true : false);
 
-    const { loading, error } = useSelector(state => state.auth);
+    const { loading } = useSelector((state) => state.auth);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -22,139 +22,52 @@ export const Auth = () => {
     const emailRef = useRef(null);
     const passwordRef = useRef(null);
 
-    const handleValidation = () => {
-        const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-    
-        const validationCheck = {
-            firstNameIsValid: firstName.trim() !== "",
-            lastNameIsValid: lastName.trim() !== "",
-            emailIsValid: emailPattern.test(email),
-            passwordIsValid: isLogin ? password.trim().length >= 0 : password.trim().length >= 8,
-        };
-    
-        const clearErrors = (ref) => {
-            if (!ref.current) return;
-            const errorMessage = ref.current.nextElementSibling;
-            if (errorMessage && errorMessage.classList.contains("error-message")) {
-                errorMessage.remove();
-            }
-            ref.current.style.borderColor = "";
-            ref.current.setCustomValidity(""); // Clears any custom validity message
-        };
-    
-        const setErrorMessage = (ref, message) => {
-            clearErrors(ref);
-            ref.current.insertAdjacentHTML(
-                "afterend",
-                `<p class="error-message" style="color: red;">${message}</p>`
-            );
-            ref.current.style.borderColor = "red";
-            ref.current.setCustomValidity("");
-        };
-    
-        let isValid = true;
-        if (!isLogin) {
-            if (!validationCheck.firstNameIsValid) {
-                setErrorMessage(firstNameRef, "Please enter your first name");
-                isValid = false;
-            } else {
-                clearErrors(firstNameRef);
-            }
-    
-            if (!validationCheck.lastNameIsValid) {
-                setErrorMessage(lastNameRef, "Please enter your last name");
-                isValid = false;
-            } else {
-                clearErrors(lastNameRef);
-            }
-    
-            if (!validationCheck.emailIsValid) {
-                setErrorMessage(emailRef, "Please enter a valid email address");
-                isValid = false;
-            } else {
-                clearErrors(emailRef);
-            }
-        
-            if (!validationCheck.passwordIsValid) {
-                setErrorMessage(passwordRef, "Password must be at least 8 characters long");
-                isValid = false;
-            } else {
-                clearErrors(passwordRef);
-            }
-        } else {
-            if (!validationCheck.emailIsValid) {
-                setErrorMessage(emailRef, "Please enter your email address");
-                isValid = false;
-            } else {
-                clearErrors(emailRef);
-            }
-        
-            if (!validationCheck.passwordIsValid) {
-                setErrorMessage(passwordRef, "Please enter your password");
-                isValid = false;
-            } else {
-                clearErrors(passwordRef);
-            }
-        }
-        
-        return isValid;
-    };
-    
-    
+    const { validateInputs, clearErrors } = !isLogin ? useValidationUtils({ passwordLength: 8 }) : useValidationUtils();
+
     const handleAuth = async (e) => {
         e.preventDefault();
-        if (!handleValidation()) return;
+        const refs = [firstNameRef, lastNameRef, emailRef, passwordRef];
+        const isValid = validateInputs(refs);
 
-        let credentials = {};
-        let resultAction= null;
-        if (isLogin) {
-            credentials = { email, password };
-            resultAction = await dispatch(loginUser(credentials));
-        } else {
-            credentials = { email, password, firstName, lastName };
-            resultAction = await dispatch(signupUser(credentials));
-        }
+        if (!isValid) return;
 
-        if (resultAction.meta.requestStatus === 'fulfilled') {
-            navigate('/profile');
-        } else if (resultAction.meta.requestStatus === 'rejected') {
+        const credentials = isLogin
+            ? { email, password }
+            : { email, password, firstName, lastName };
+
+        const resultAction = await dispatch(
+            isLogin ? loginUser(credentials) : signupUser(credentials)
+        );
+
+        if (resultAction.meta.requestStatus === "fulfilled") {
+            navigate("/profile");
+        } else if (resultAction.meta.requestStatus === "rejected") {
             console.log(resultAction.payload);
         }
-    }
+    };
 
     useEffect(() => {
         if (rememberMe) {
             localStorage.setItem("email", email);
+            localStorage.setItem("password", password);
         } else {
             localStorage.removeItem("email");
+            localStorage.removeItem("password");
         }
-    }, [email, rememberMe]);
+    }, [email, password, rememberMe]);
 
     useEffect(() => {
         setEmail(localStorage.getItem("email") || "");
         setPassword("");
         setFirstName("");
         setLastName("");
-
-   // Clear errors for all refs
-   [firstNameRef, lastNameRef, emailRef, passwordRef].forEach((ref) => {
-    if (ref.current) {
-        const errorMessage = ref.current.nextElementSibling;
-        if (errorMessage && errorMessage.classList.contains("error-message")) {
-            errorMessage.remove();
-        }
-        ref.current.style.borderColor = "";
-        ref.current.setCustomValidity("");
-    }
-});
-
     }, [isLogin]);
 
     return (
         <main>
             <section className="sign-in-content">
                 <i className="fa fa-user-circle sign-in-icon"></i>
-                <h1>{isLogin ? 'Sign In' : 'Sign Up'}</h1>
+                <h1>{isLogin ? "Sign In" : "Sign Up"}</h1>
                 <form onSubmit={handleAuth}>
                     {!isLogin && (
                         <>
@@ -165,7 +78,10 @@ export const Auth = () => {
                                     id="first-name"
                                     name="first-name"
                                     value={firstName}
-                                    onChange={(e) => setFirstName(e.target.value)}
+                                    onChange={(e) => {
+                                        setFirstName(e.target.value);
+                                        clearErrors(firstNameRef);
+                                    }}
                                     ref={firstNameRef}
                                 />
                             </div>
@@ -176,7 +92,10 @@ export const Auth = () => {
                                     id="last-name"
                                     name="last-name"
                                     value={lastName}
-                                    onChange={(e) => setLastName(e.target.value)}
+                                    onChange={(e) => {
+                                        setLastName(e.target.value);
+                                        clearErrors(lastNameRef);
+                                    }}
                                     ref={lastNameRef}
                                 />
                             </div>
@@ -189,7 +108,10 @@ export const Auth = () => {
                             id="email"
                             name="email"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                clearErrors(emailRef);
+                            }}
                             ref={emailRef}
                         />
                     </div>
@@ -200,7 +122,10 @@ export const Auth = () => {
                             id="password"
                             name="password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                clearErrors(passwordRef);
+                            }}
                             ref={passwordRef}
                         />
                     </div>
@@ -210,20 +135,19 @@ export const Auth = () => {
                                 type="checkbox"
                                 id="remember-me"
                                 checked={rememberMe}
-                                onChange={() => setRememberMe(prev => !prev)}
+                                onChange={() => setRememberMe((prev) => !prev)}
                             />
                             <label htmlFor="remember-me">Remember me</label>
                         </div>
                     )}
                     <button type="submit" className="sign-in-button" disabled={loading}>
-                        {isLogin ? 'Sign In' : 'Sign Up'}
+                        {isLogin ? "Sign In" : "Sign Up"}
                     </button>
-                    {error && <p>{error}</p>}
                 </form>
-                <a href="#" onClick={() => setIsLogin(prev => !prev)}>
-                    {isLogin ? 'Switch to Sign Up' : 'Switch to Sign In'}
+                <a href="#" onClick={() => setIsLogin((prev) => !prev)}>
+                    {isLogin ? "Don't have an account? Sign up now!" : "Already registered? Log in here!"}
                 </a>
             </section>
         </main>
-  )
-}
+    );
+};

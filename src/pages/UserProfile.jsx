@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 
 export const UserProfile = () => {
     const [userData, setUserData] = useState(null);
@@ -24,17 +24,17 @@ export const UserProfile = () => {
             }
 
             try {
-                const response = await axios.get("http://localhost:3001/api/v1/user/profile", {
+                const response = await axiosInstance.post("user/profile", {
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`
+
                     }
                 });
     
                 if (!response.ok) {
                     console.table("Error: ", response);
                     localStorage.removeItem("token");
-                    // window.location.href = "/auth";
                 }
                 
                 setUserData(response.data);
@@ -42,9 +42,9 @@ export const UserProfile = () => {
             } catch (error) {
                 setError(error.response?.data?.message);
                 localStorage.removeItem("token");
-                // setTimeout(() => {
-                //     navigate("/auth");
-                // }, 2000);
+                setTimeout(() => {
+                    navigate("/auth");
+                }, 2000);
             } finally {
                 setLoading(false);
             }
