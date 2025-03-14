@@ -13,6 +13,7 @@ export const UserProfile = () => {
         const fetchUserData = async() => {
             setLoading(true);
             const token = localStorage.getItem("token");
+            console.log(token);
             if (!token) {
                 setError("You are not logged in");
                 setLoading(false);
@@ -29,25 +30,29 @@ export const UserProfile = () => {
                         Authorization: `Bearer ${token}`
                     }
                 });
+    
                 if (!response.ok) {
-                    if (response.status === 401) {
-                        console.log("Toen expired, redirecting to login page...");
-                        localStorage.removeItem("token");
-                        window.location.href = "/auth";
-                    }
+                    console.table("Error: ", response);
+                    localStorage.removeItem("token");
+                    // window.location.href = "/auth";
                 }
-
-                const data = await response.json();
-                setUserData(data);
+                
+                setUserData(response.data);
 
             } catch (error) {
-                setError(error.response.data.message);
+                setError(error.response?.data?.message);
+                localStorage.removeItem("token");
+                // setTimeout(() => {
+                //     navigate("/auth");
+                // }, 2000);
             } finally {
                 setLoading(false);
             }
         }
         fetchUserData();
     }, []);
+
+    console.log(userData);
 
     return (
         <>
