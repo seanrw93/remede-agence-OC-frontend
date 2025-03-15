@@ -11,10 +11,12 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route path="*" element={<NotFound />} />
+
           <Route path="/" element={<Layout />}>
             <Route path="/profile" element={<UserProfile />} />
           </Route>
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </>

@@ -12,7 +12,7 @@ export const Auth = () => {
     const [lastName, setLastName] = useState("");
     const [rememberMe, setRememberMe] = useState(localStorage.getItem("email") ? true : false);
 
-    const { loading } = useSelector((state) => state.auth);
+    const { loading, error } = useSelector((state) => state.auth);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -57,10 +57,18 @@ export const Auth = () => {
     }, [email, password, rememberMe]);
 
     useEffect(() => {
+        // Reset form fields
         setEmail(localStorage.getItem("email") || "");
         setPassword("");
         setFirstName("");
         setLastName("");
+        setRememberMe(false);
+
+        // Clear validation errors for all input fields
+        clearErrors(firstNameRef);
+        clearErrors(lastNameRef);
+        clearErrors(emailRef);
+        clearErrors(passwordRef);
     }, [isLogin]);
 
     return (
@@ -130,15 +138,18 @@ export const Auth = () => {
                         />
                     </div>
                     {isLogin && (
-                        <div className="input-remember">
-                            <input
-                                type="checkbox"
-                                id="remember-me"
-                                checked={rememberMe}
-                                onChange={() => setRememberMe((prev) => !prev)}
-                            />
-                            <label htmlFor="remember-me">Remember me</label>
-                        </div>
+                        <>
+                            <div className="input-remember">
+                                <input
+                                    type="checkbox"
+                                    id="remember-me"
+                                    checked={rememberMe}
+                                    onChange={() => setRememberMe((prev) => !prev)}
+                                />
+                                <label htmlFor="remember-me">Remember me</label>
+                            </div>
+                            {error && <div className="error-message">{error}</div>}
+                        </>
                     )}
                     <button type="submit" className="sign-in-button" disabled={loading}>
                         {isLogin ? "Sign In" : "Sign Up"}

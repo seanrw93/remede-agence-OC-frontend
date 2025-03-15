@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
+import { useDispatch, useSelector } from "react-redux";
+import { setUser, clearUser } from "../store/user/userSlice"
+import { logout } from "../store/auth/authSlice"
 import axiosInstance from '../utils/axiosInstance';
 
 export const UserProfile = () => {
-    const [userData, setUserData] = useState(null);
+    const {id} = useParams();
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
+    const user = useSelector((state) => state.user);
+
+    const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    const handleLogout = () => {
+        dispatch(clearUser());
+        dispatch(logout()); 
+        setLoading(true);
+        setTimeout(() => navigate("/auth"), 2000);
+    }
 
     useEffect(() => {
         const fetchUserData = async() => {
@@ -37,7 +50,7 @@ export const UserProfile = () => {
                     localStorage.removeItem("token");
                 }
                 
-                setUserData(response.data);
+                dispatch(setUser(response.data.body));
 
             } catch (error) {
                 setError(error.response?.data?.message);
@@ -50,17 +63,23 @@ export const UserProfile = () => {
             }
         }
         fetchUserData();
-    }, []);
+    }, [id, navigate]);
 
-    console.log(userData);
+    console.log(user);
 
     return (
         <>
-            <h1>User Profile</h1>
-            <div>
-                { loading && <div>Loading...</div> }
-                { JSON.stringify(userData, null, 2) || {error} }
-            </div>
+            {!loading ? (
+                <>
+                    <h1>Hello</h1>
+                    <div>
+                        { loading && <div>Loading...</div> }
+                        { JSON.stringify(user, null, 2) || {error} }
+                    </div>
+                    <button onClick={handleLogout}>Logout</button>
+                </>
+                ) : <div>Loading...</div>
+            }
         </>
     )
 }
