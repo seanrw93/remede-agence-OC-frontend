@@ -67,14 +67,16 @@ export const UserProfile = () => {
 
     console.log(user);
 
+    const { firstName, lastName } = user.payload;
+
     return (
         <>
             {!loading ? (
                 <>
-                    <h1>Hello</h1>
+                    <h1>Hello {firstName} {lastName}</h1>
                     <div>
                         { loading && <div>Loading...</div> }
-                        { JSON.stringify(user, null, 2) || {error} }
+                        { JSON.stringify(user.payload.firstName, null, 2) || {error} }
                     </div>
                     <button onClick={handleLogout}>Logout</button>
                 </>
