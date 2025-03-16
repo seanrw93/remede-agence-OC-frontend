@@ -1,87 +1,75 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router';
+import React, { useEffect } from 'react'
+import { useNavigate } from 'react-router';
 import { useDispatch, useSelector } from "react-redux";
-import { setUser, clearUser } from "../store/user/userSlice"
-import { logout } from "../store/auth/authSlice"
+import { setUser } from "../store/user/userSlice"
+import { setLoading, setError } from "../store/auth/authSlice"
 import axiosInstance from '../utils/axiosInstance';
 
 export const UserProfile = () => {
-    const {id} = useParams();
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
 
     const user = useSelector((state) => state.user);
+    const { loading, error } = useSelector((state) => state.auth)
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        dispatch(clearUser());
-        dispatch(logout()); 
-        setLoading(true);
-        setTimeout(() => navigate("/auth"), 2000);
-    }
-
     useEffect(() => {
         const fetchUserData = async() => {
-            setLoading(true);
             const token = localStorage.getItem("token");
             console.log(token);
             if (!token) {
-                setError("You are not logged in");
-                setLoading(false);
+                dispatch(setError("You are not logged in"))
                 setTimeout(() => {
                     navigate("/auth");
                 }, 2000);
                 return;
             }
 
+            dispatch(setLoading(true));
+            
             try {
                 const response = await axiosInstance.post("user/profile", {
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`
-
                     }
                 });
-    
-                if (!response.ok) {
-                    console.table("Error: ", response);
-                    localStorage.removeItem("token");
-                }
                 
                 dispatch(setUser(response.data.body));
 
             } catch (error) {
-                setError(error.response?.data?.message);
+                dispatch(setError(error?.response?.data?.message || "An unknown error has occurred"))
                 localStorage.removeItem("token");
                 setTimeout(() => {
                     navigate("/auth");
                 }, 2000);
             } finally {
-                setLoading(false);
+                dispatch(setLoading(false));
             }
         }
         fetchUserData();
-    }, [id, navigate]);
+    }, [navigate, dispatch]);
 
     console.log(user);
 
-    const { firstName, lastName } = user.payload;
+    const firstName = user?.payload?.firstName;
 
     return (
         <>
-            {!loading ? (
+            {loading ? (
+                <div>Loading...</div>
+            ) : (
                 <>
-                    <h1>Hello {firstName} {lastName}</h1>
+                    <h1>Hello {firstName}</h1>
                     <div>
-                        { loading && <div>Loading...</div> }
-                        { JSON.stringify(user.payload.firstName, null, 2) || {error} }
+                        {error ? (
+                            <div className="error-message">{error}</div>
+                        ) : (
+                            <pre>{JSON.stringify(user.payload, null, 2)}</pre>
+                        )}
                     </div>
-                    <button onClick={handleLogout}>Logout</button>
                 </>
-                ) : <div>Loading...</div>
-            }
+            )}
         </>
     )
 }

@@ -53,6 +53,7 @@ html {
   
   .main-nav-item {
     text-decoration: none;
+    list-style: none;
     margin-right: 0.5rem;
   }
   

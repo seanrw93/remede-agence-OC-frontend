@@ -12,7 +12,7 @@ export const Auth = () => {
     const [lastName, setLastName] = useState("");
     const [rememberMe, setRememberMe] = useState(localStorage.getItem("email") ? true : false);
 
-    const { loading, error } = useSelector((state) => state.auth);
+    const { token, loading, error } = useSelector((state) => state.auth);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -46,6 +46,13 @@ export const Auth = () => {
         }
     };
 
+
+    useEffect(() => {
+        if (rememberMe && token) {
+            navigate("/profile")
+        }
+    }, [rememberMe, token, navigate])
+
     useEffect(() => {
         if (rememberMe) {
             localStorage.setItem("email", email);
@@ -62,8 +69,7 @@ export const Auth = () => {
         setPassword("");
         setFirstName("");
         setLastName("");
-        setRememberMe(false);
-
+        
         // Clear validation errors for all input fields
         clearErrors(firstNameRef);
         clearErrors(lastNameRef);

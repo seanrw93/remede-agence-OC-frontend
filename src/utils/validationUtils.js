@@ -1,4 +1,5 @@
 export const useValidationUtils = (config = { emailPattern: null, passwordLength: 0 }) => {
+    console.log("useValidationUtil hook running")
     const clearErrors = (ref) => {
         if (!ref || !ref.current) return;
         const errorMessage = ref.current.nextElementSibling;
@@ -11,13 +12,13 @@ export const useValidationUtils = (config = { emailPattern: null, passwordLength
 
     const setErrorMessage = (ref, message) => {
         if (!ref || !ref.current) return;
-        clearErrors(ref); // Clear any existing errors
+        clearErrors(ref);
         ref.current.insertAdjacentHTML(
             "afterend",
             `<p class="error-message" style="color: red;">${message}</p>`
         );
-        ref.current.style.borderColor = "red"; // Highlight the field with an error
-        ref.current.setCustomValidity(message); // Set custom validity for the browser
+        ref.current.style.borderColor = "red";
+        ref.current.setCustomValidity(message); 
     };
 
     const validationCheck = (ref) => {
@@ -62,18 +63,18 @@ export const useValidationUtils = (config = { emailPattern: null, passwordLength
                 return true;
         }
 
-        clearErrors(ref); // Clear errors if the input is valid
-        return true; // Input is valid
+        clearErrors(ref);
+        return true; 
     };
 
     const validateInputs = (refs) => {
         let isValid = true;
         refs.forEach((ref) => {
             if (ref && ref.current) {
-                clearErrors(ref); // Clear previous errors
-                const inputIsValid = validationCheck(ref); // Validate the current input
+                clearErrors(ref); 
+                const inputIsValid = validationCheck(ref); 
                 if (!inputIsValid) {
-                    isValid = false; // Mark the form as invalid if any input fails
+                    isValid = false;
                 }
             }
         });
