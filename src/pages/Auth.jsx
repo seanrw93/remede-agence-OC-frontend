@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { loginUser, signupUser } from "../store/auth/authSlice";
+import { loginUser, logout, signupUser, setLoading } from "../store/auth/authSlice";
 import { useValidationUtils } from "../utils/validationUtils";
+import { useDebouncer } from "../utils/useDebouncer"
 
 export const Auth = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState(localStorage.getItem("email") || "");
     const [password, setPassword] = useState(localStorage.getItem("password") || "");
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false)
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [rememberMe, setRememberMe] = useState(localStorage.getItem("email") ? true : false);
@@ -22,7 +24,7 @@ export const Auth = () => {
     const emailRef = useRef(null);
     const passwordRef = useRef(null);
 
-    const { validateInputs, clearErrors } = !isLogin ? useValidationUtils({ passwordLength: 8 }) : useValidationUtils();
+    const { validateInputs, clearErrors } = useValidationUtils({ passwordLength: isLogin ? 0 : 8 })
 
     const handleAuth = async (e) => {
         e.preventDefault();
@@ -46,12 +48,24 @@ export const Auth = () => {
         }
     };
 
+    const togglePasswordVisibility = () => {
+        setIsPasswordVisible(prev => !prev);
+    }
+
+    useEffect(() => {
+        dispatch(setLoading(false));
+    }, [dispatch]);
 
     useEffect(() => {
         if (rememberMe && token) {
+            console.log("Redirecting to profile...")
             navigate("/profile")
+        } else if (token) {
+            console.log("Logging out ...")
+            dispatch(logout())
         }
-    }, [rememberMe, token, navigate])
+
+    }, [navigate])
 
     useEffect(() => {
         if (rememberMe) {
@@ -78,93 +92,104 @@ export const Auth = () => {
     }, [isLogin]);
 
     return (
-        <main>
-            <section className="sign-in-content">
-                <i className="fa fa-user-circle sign-in-icon"></i>
-                <h1>{isLogin ? "Sign In" : "Sign Up"}</h1>
-                <form onSubmit={handleAuth}>
-                    {!isLogin && (
-                        <>
+        //Load page only if token not found, otherwise redirect to profile page
+        <>
+            {!token && (
+                <main class="bg-dark">
+                    <section className="sign-in-content bg-dark">
+                        <i className="fa fa-user-circle sign-in-icon"></i>
+                        <h1>{isLogin ? "Sign In" : "Sign Up"}</h1>
+                        <form onSubmit={handleAuth}>
+                            {!isLogin && (
+                                <>
+                                    <div className="input-wrapper">
+                                        <label htmlFor="first-name">First Name</label>
+                                        <input
+                                            type="text"
+                                            id="first-name"
+                                            name="first-name"
+                                            value={firstName}
+                                            onChange={(e) => {
+                                                setFirstName(e.target.value);
+                                                clearErrors(firstNameRef);
+                                            }}
+                                            ref={firstNameRef}
+                                        />
+                                    </div>
+                                    <div className="input-wrapper">
+                                        <label htmlFor="last-name">Last Name</label>
+                                        <input
+                                            type="text"
+                                            id="last-name"
+                                            name="last-name"
+                                            value={lastName}
+                                            onChange={(e) => {
+                                                setLastName(e.target.value);
+                                                clearErrors(lastNameRef);
+                                            }}
+                                            ref={lastNameRef}
+                                        />
+                                    </div>
+                                </>
+                            )}
                             <div className="input-wrapper">
-                                <label htmlFor="first-name">First Name</label>
+                                <label htmlFor="email">Email</label>
                                 <input
-                                    type="text"
-                                    id="first-name"
-                                    name="first-name"
-                                    value={firstName}
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    value={email}
                                     onChange={(e) => {
-                                        setFirstName(e.target.value);
-                                        clearErrors(firstNameRef);
+                                        setEmail(e.target.value);
+                                        clearErrors(emailRef);
                                     }}
-                                    ref={firstNameRef}
+                                    ref={emailRef}
                                 />
                             </div>
                             <div className="input-wrapper">
-                                <label htmlFor="last-name">Last Name</label>
+                                <label htmlFor="password">Password</label>
                                 <input
-                                    type="text"
-                                    id="last-name"
-                                    name="last-name"
-                                    value={lastName}
+                                    type={isPasswordVisible ? "text" : "password"}
+                                    id="password"
+                                    name="password"
+                                    value={password}
                                     onChange={(e) => {
-                                        setLastName(e.target.value);
-                                        clearErrors(lastNameRef);
+                                        setPassword(e.target.value);
+                                        clearErrors(passwordRef);
                                     }}
-                                    ref={lastNameRef}
+                                    ref={passwordRef}
                                 />
+                                <button type="button" onClick={togglePasswordVisibility} class="showhide-password">
+                                    {isPasswordVisible
+                                        ? <i class="fa fa-eye-slash"></i>
+                                        : <i class="fa fa-eye"></i>
+                                    }
+                                </button>
                             </div>
-                        </>
-                    )}
-                    <div className="input-wrapper">
-                        <label htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={email}
-                            onChange={(e) => {
-                                setEmail(e.target.value);
-                                clearErrors(emailRef);
-                            }}
-                            ref={emailRef}
-                        />
-                    </div>
-                    <div className="input-wrapper">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            value={password}
-                            onChange={(e) => {
-                                setPassword(e.target.value);
-                                clearErrors(passwordRef);
-                            }}
-                            ref={passwordRef}
-                        />
-                    </div>
-                    {isLogin && (
-                        <>
-                            <div className="input-remember">
-                                <input
-                                    type="checkbox"
-                                    id="remember-me"
-                                    checked={rememberMe}
-                                    onChange={() => setRememberMe((prev) => !prev)}
-                                />
-                                <label htmlFor="remember-me">Remember me</label>
-                            </div>
-                            {error && <div className="error-message">{error}</div>}
-                        </>
-                    )}
-                    <button type="submit" className="sign-in-button" disabled={loading}>
-                        {isLogin ? "Sign In" : "Sign Up"}
-                    </button>
-                </form>
-                <a href="#" onClick={() => setIsLogin((prev) => !prev)}>
-                    {isLogin ? "Don't have an account? Sign up now!" : "Already registered? Log in here!"}
-                </a>
-            </section>
-        </main>
+                            {isLogin && (
+                                <>
+                                    <div className="input-remember">
+                                        <input
+                                            type="checkbox"
+                                            id="remember-me"
+                                            checked={rememberMe}
+                                            onChange={() => setRememberMe((prev) => !prev)}
+                                        />
+                                        <label htmlFor="remember-me">Remember me</label>
+                                    </div>
+                                    {error && <div className="error-message">{error}</div>}
+                                </>
+                            )}
+                            <button type="submit" className="sign-in-button" disabled={loading}>
+                                {isLogin ? "Sign In" : "Sign Up"}
+                            </button>
+                        </form>
+                        <a href="#" onClick={() => setIsLogin((prev) => !prev)}>
+                            {isLogin ? "Don't have an account? Sign up now!" : "Already registered? Log in here!"}
+                        </a>
+                    </section>
+                </main>
+            )}
+        </>
     );
 };

@@ -1,5 +1,4 @@
 export const useValidationUtils = (config = { emailPattern: null, passwordLength: 0 }) => {
-    console.log("useValidationUtil hook running")
     const clearErrors = (ref) => {
         if (!ref || !ref.current) return;
         const errorMessage = ref.current.nextElementSibling;
@@ -49,11 +48,12 @@ export const useValidationUtils = (config = { emailPattern: null, passwordLength
                 break;
             case "password":
                 const passwordLength = config.passwordLength || 8;
+                if (value === "" || passwordLength === 0) {
+                    setErrorMessage(ref, "Please enter a password");
+                    return false;
+                }
                 if (value.length < passwordLength) {
                     setErrorMessage(ref, `Password must be at least ${passwordLength} characters long`);
-                    return false;
-                } else if (passwordLength === 0) {
-                    setErrorMessage(ref, "Please enter a password");
                     return false;
                 }
                 break;

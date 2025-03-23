@@ -5,10 +5,8 @@ import { setLoading, logout } from "../store/auth/authSlice"
 
 export const Header = () => {
 
-    console.log("Header component rendered");
-
     const user = useSelector((state) => state.user);
-    const { loading } = useSelector((state) => state.auth);
+    const { token } = useSelector((state) => state.auth);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -16,12 +14,16 @@ export const Header = () => {
     const firstName = user?.payload?.firstName;
 
 
-    const handleLogout = () => {
-        dispatch(clearUser());
-        dispatch(logout()); 
-        dispatch(setLoading(true));
-        setTimeout(() => navigate("/auth"), 1000);
-    }
+    const handleLogout = async () => {
+        try {
+            dispatch(clearUser());
+            dispatch(logout()); 
+            dispatch(setLoading(true)); 
+            setTimeout(() => navigate("/"), 1000);
+        } catch (error) {
+            console.error("Error during logout:", error);
+        }
+    };
 
     return (
         <header>
@@ -34,9 +36,9 @@ export const Header = () => {
                     />
                     <h1 className="sr-only">Argent Bank</h1>
                 </Link>
-                {!loading && (
+                {token ? (
                     <div>
-                        <Link className="main-nav-item" to="/" >
+                        <Link className="main-nav-item" to="/profile" >
                             <i className="fa fa-user-circle"></i>
                             {firstName}
                         </Link>
@@ -47,6 +49,15 @@ export const Header = () => {
                             <i className="fa fa-sign-out"></i>
                             Sign Out
                         </a>
+                    </div>
+                ) : (
+                    <div>
+                        {location.pathname === "/" && (
+                            <Link className="main-nav-item" to="/auth">
+                                <i className="fa fa-sign-in"></i>
+                                Sign In
+                            </Link>                        
+                        )}
                     </div>
                 )}
             </nav>
