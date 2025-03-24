@@ -7,32 +7,23 @@ import { AccountCard } from "../components/AccountCard"
 import { Spinner } from "../components/Spinner";
 
 import { testAccounts } from '../data/testData';
+import { withAuth } from "../utils/withAuth"
 
 import axiosInstance from '../utils/axiosInstance';
 
-export const UserProfile = () => {
+const UserProfile = () => {
     const user = useSelector((state) => state.user);
-    const { loading, error } = useSelector((state) => state.auth)
+    const { token, loading, error } = useSelector((state) => state.auth)
 
     const [accounts, setAccounts] = useState(null);
-    const [accountsLoading, setAccountsLoading] = useState(false); 
+    const [accountsLoading, setAccountsLoading] = useState(false);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    console.log("Loading status:", loading)
-
     useEffect(() => {
         const fetchUserData = async() => {
             dispatch(setLoading(true));
-            const token = localStorage.getItem("token");
-            if (!token) {
-                dispatch(setError("You are not logged in"))
-                setTimeout(() => {
-                    navigate("/auth");
-                }, 2000);
-                return;
-            }
             
             try {
                 const response = await axiosInstance.post("user/profile", {
@@ -46,10 +37,6 @@ export const UserProfile = () => {
 
             } catch (error) {
                 dispatch(setError(error?.response?.data?.message || "An unknown error has occurred"))
-                localStorage.removeItem("token");
-                setTimeout(() => {
-                    navigate("/auth");
-                }, 2000);
             } finally {
                 dispatch(setLoading(false));
             }
@@ -74,7 +61,7 @@ export const UserProfile = () => {
         }
 
         fetchAccounts();
-    }, [])
+    }, [dispatch, token])
 
     const firstName = user?.payload?.firstName;
     const lastName = user?.payload?.lastName;
@@ -85,47 +72,41 @@ export const UserProfile = () => {
                 <Spinner />
             ) : (
                 <>
-                    {/* <div>
-                        {error ? (
-                            <div className="error-message">{error}</div>
-                        ) : (
-                            <pre>{JSON.stringify(user.payload, null, 2)}</pre>
-                        )}
-                    </div> */}
-                    <main className="main bg-dark">
-                        {/* Header Section */}
-                        {error ? (
-                            <div className="errorMessage">{error}</div>
-                        ) : (
-                            <>
-                                <div className="header">
-                                    <h1>
-                                        Welcome back
-                                        <br />
-                                        {firstName} {lastName}!
-                                    </h1>
-                                    <button className="edit-button">Edit Name</button>
-                                </div>
-
-                                {/* Accounts Section */}
-                                <h2 className="sr-only">Accounts</h2>
-                                {accounts?.map((account, index) => (
-                                    <AccountCard
-                                        key={index}
-                                        id={index}
-                                        accountName={account?.accountName}
-                                        accountNumber={account?.accountNumber}
-                                        balance={account?.balance}
-                                        currency={account?.currency}
-                                        description={account?.description}
-                                        pathTo={`/account/${index}`}
-                                    />
-                                ))}
-                            </>
-                        )}
-                    </main>
+                {!error && (
+                    <>
+                        <main className="main bg-dark">
+                            {/* Header Section */}                            
+                            <div className="header">
+                                <h1>
+                                    Welcome back
+                                    <br />
+                                    {firstName} {lastName}!
+                                </h1>
+                                <button className="edit-button">Edit Name</button>
+                            </div>
+    
+                            {/* Accounts Section */}
+                            <h2 className="sr-only">Accounts</h2>
+                            {accounts?.map((account, index) => (
+                                <AccountCard
+                                    key={index}
+                                    id={index}
+                                    accountName={account?.accountName}
+                                    accountNumber={account?.accountNumber}
+                                    balance={account?.balance}
+                                    currency={account?.currency}
+                                    description={account?.description}
+                                    pathTo={`/account/${index}`}
+                                />
+                            ))}
+    
+                        </main>
+                    </>
+                )}
                 </>
             )}
         </>
-    )
-}
+    );
+};
+
+export default withAuth(UserProfile, 1000);

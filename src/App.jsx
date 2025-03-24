@@ -3,8 +3,8 @@ import { Auth } from './pages/Auth';
 import { Layout } from './components/Layout';
 import { NotFound } from './pages/NotFound';
 import { Home } from './pages/Home';
-import { UserProfile } from './pages/UserProfile';
-import { Transactions } from './pages/Transactions';
+import Transactions from './pages/Transactions';
+import UserProfile from './pages/UserProfile';
 
 function App() {
 

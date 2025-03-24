@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "../utils/formatCurrency";
 import "../styles/main.css"
 
 export const AccountCard = (
@@ -16,7 +17,7 @@ export const AccountCard = (
     <section className="account">
         <div className="account-content-wrapper">
             <h3 className="account-title">Argent {accountName} ({accountNumber})</h3>
-            <p className="account-amount">{currency}{balance}</p>
+            <p className="account-amount">{formatCurrency(balance, currency)}</p>
             <p className="account-amount-description">{description}</p>
         </div>
         <div className="account-content-wrapper cta">

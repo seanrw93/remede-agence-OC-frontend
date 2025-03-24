@@ -1,18 +1,11 @@
-import { useEffect } from "react"
 import { useParams, useNavigate } from "react-router";
 import { useSelector } from "react-redux";
+import { withAuth } from "../utils/withAuth";
 
-export const Transactions = () => {
+const Transactions = () => {
     const { token } = useSelector((state) => state.auth);
     const { id } = useParams();
     const navigate = useNavigate();
-
-    useEffect(() => {
-        if (!token) {
-            console.log("User not logged in. redirecting to homepage...")
-            navigate("/")
-        }
-    }, [token, navigate])
 
     return (
         <>
@@ -22,3 +15,5 @@ export const Transactions = () => {
         </>
     )
 }
+
+export default withAuth(Transactions)
