@@ -26,3 +26,5 @@ export const AccountCard = (
     </section>
   )
 }
+
+export default AccountCard;

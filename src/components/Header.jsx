@@ -25,6 +25,13 @@ export const Header = () => {
         }
     };
 
+    const navLinkStyles = {
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center"
+    }
+
     return (
         <header>
             <nav className="main-nav">
@@ -37,7 +44,7 @@ export const Header = () => {
                     <h1 className="sr-only">Argent Bank</h1>
                 </Link>
                 {token ? (
-                    <div>
+                    <div style={firstName?.length > 6 ? navLinkStyles : undefined}>
                         <Link className="main-nav-item" to="/profile" >
                             <i className="fa fa-user-circle"></i>
                             {firstName}

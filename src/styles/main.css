@@ -155,6 +155,16 @@ html {
     font-weight: bold;
     margin-bottom: 0.5rem;
   }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #038d5a;
+    color: #fff;
+    border-color: #038d5a;
+  }
   
   .sign-in-button {
     display: block;
@@ -275,6 +285,41 @@ html {
     color: #fff;
     font-weight: bold;
     padding: 10px;
+  }
+
+  .edit-button.edit-button--cancel {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+  }
+
+  .edit-button.edit-button--cancel:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+  }
+
+  .edit-buttons-container {
+    margin: 20px auto;
+    max-width: 200px;
+  }
+
+  .edit-buttons-container .edit-button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .edit-names-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 400px;
+    margin: 10px auto;
+  }
+
+  .edit-names-container input {
+    margin-bottom: 10px;
+    line-height: 1.6em;
+    padding: 5px;
+    font-size: 1.2rem;
+    text-align: center;
   }
   
   .header {

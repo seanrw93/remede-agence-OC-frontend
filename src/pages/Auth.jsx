@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { loginUser, logout, signupUser, setLoading } from "../store/auth/authSlice";
 import { useValidationUtils } from "../utils/validationUtils";
 import { useDebouncer } from "../utils/useDebouncer"
+import { formatName } from "../utils/formatName";
 
 export const Auth = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -30,21 +31,33 @@ export const Auth = () => {
         e.preventDefault();
         const refs = [firstNameRef, lastNameRef, emailRef, passwordRef];
         const isValid = validateInputs(refs);
-
+    
         if (!isValid) return;
-
+    
         const credentials = isLogin
             ? { email, password }
-            : { email, password, firstName, lastName };
-
+            : { email, password, firstName: formatName(firstName), lastName: formatName(lastName) };
+    
         const resultAction = await dispatch(
             isLogin ? loginUser(credentials) : signupUser(credentials)
         );
-
+    
         if (resultAction.meta.requestStatus === "fulfilled") {
-            navigate("/profile");
-        } else if (resultAction.meta.requestStatus === "rejected") {
-            console.log(resultAction.payload);
+            if (!isLogin) {
+                // Automatically log the user in after signup
+                const loginResult = await dispatch(loginUser({ email, password }));
+                if (loginResult.meta.requestStatus === "fulfilled") {
+                    console.log("User logged in successfully after signup");
+                    navigate("/profile");
+                } else {
+                    console.error("Failed to log in after signup:", loginResult.payload);
+                }
+            } else {
+                console.log("User logged in successfully");
+                navigate("/profile");
+            }
+        } else {
+            console.error("Signup/Login failed:", resultAction.payload);
         }
     };
 
@@ -56,16 +69,15 @@ export const Auth = () => {
         dispatch(setLoading(false));
     }, [dispatch]);
 
-    useEffect(() => {
-        if (rememberMe && token) {
-            console.log("Redirecting to profile...")
-            navigate("/profile")
-        } else if (token) {
-            console.log("Logging out ...")
-            dispatch(logout())
+    useEffect(() => {  
+        if (token) {
+            console.log("Token exists, redirecting to profile...");
+            navigate("/profile");
+        } else {
+            console.log("No token found, logging out...");
+            dispatch(logout());
         }
-
-    }, [navigate])
+    }, [token, loading, navigate, dispatch]);
 
     useEffect(() => {
         if (rememberMe) {
