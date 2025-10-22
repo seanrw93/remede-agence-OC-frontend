@@ -36,7 +36,7 @@ const UserProfile = () => {
             dispatch(setLoading(true));
             
             try {
-                const userData = await fetchUserProfileData(token)
+                const userData = await fetchUserProfileData();
                 dispatch(setUser(userData));
             } catch (error) {
                 dispatch(setError(error?.response?.data?.message || "An unknown error has occurred"))
@@ -45,7 +45,7 @@ const UserProfile = () => {
             }
         }
         getUserData();
-    }, [navigate, dispatch]);
+    }, [navigate, dispatch, token]);
 
     useEffect(() => {
         if (user?.payload) {
